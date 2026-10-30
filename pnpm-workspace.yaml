@@ -1,0 +1,10 @@
+# pnpm 11 build-script policy. Packages reviewed for this CI:
+# The preview's TS/unit-test pipeline does not need native dependency postinstall.
+# Deny these known optional/transitive build scripts explicitly instead of disabling
+# the supply-chain guardrail or approving every future dependency.
+allowBuilds:
+  '@deepseek-ai/dsh-subprocess-local': false
+  '@google/genai': false
+  'koffi': false
+  'node-pty': false
+  'protobufjs': false

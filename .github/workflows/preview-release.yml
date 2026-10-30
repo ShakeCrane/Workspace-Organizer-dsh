@@ -71,3 +71,34 @@ jobs:
           $package = Get-Content package.json -Raw | ConvertFrom-Json
           $archive = Join-Path preview-package "workspace-organizer-dsh-$($package.version).tgz"
           gh release create "${{ github.ref_name }}" $archive --title "Lite Preview ${{ github.ref_name }}" --prerelease --notes-file "docs/RELEASE_NOTES_v$($package.version).md" --verify-tag
+
+  npm_publish:
+    name: Publish npm preview with OIDC
+    needs: [verify, prerelease]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: workspace-organizer-lite-package
+          path: preview-package
+      - name: Publish verified tarball to npm preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(node -p "require('./package.json').version")"
+          test "v$VERSION" = "$GITHUB_REF_NAME"
+          ARCHIVE="preview-package/workspace-organizer-dsh-$VERSION.tgz"
+          test -f "$ARCHIVE"
+          node -e "const p=require('./package.json'); if(p.private || p.publishConfig?.tag!=='preview' || p.name!=='workspace-organizer-dsh')process.exit(1)"
+          npm --version
+          npm publish "$ARCHIVE" --tag preview --access public

@@ -1,0 +1,4 @@
+# Installed by dsh plugin into a dedicated profile; do not apply to a real user's profile before adapter review.
+- insert:
+    - id: workspace-organizer
+      name: workspace-organizer-dsh

@@ -1,0 +1,28 @@
+# Local dependencies / generated artifacts
+node_modules/
+dist/
+build/
+.pnpm-store/
+*.tsbuildinfo
+coverage/
+*.log
+.local/
+*.tgz
+.env
+.env.*
+!.env.example
+
+# Editor / secrets / local profile
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.dsh/
+dsh-home/
+dsh-data/
+
+# Ephemeral test artifacts (not test source)
+/test/
+
+# Platform-owned local binding metadata (runtime location must remain fixed)
+.multica/

@@ -1,0 +1,65 @@
+{
+  "name": "workspace-organizer-dsh",
+  "version": "0.1.2-ui.1",
+  "private": false,
+  "license": "MIT",
+  "repository": {"type": "git", "url": "git+https://github.com/ShakeCrane/Workspace-Organizer-dsh.git"},
+  "homepage": "https://github.com/ShakeCrane/Workspace-Organizer-dsh#readme",
+  "bugs": {"url": "https://github.com/ShakeCrane/Workspace-Organizer-dsh/issues"},
+  "publishConfig": {"access": "public", "tag": "preview"},
+  "packageManager": "pnpm@11.24.0",
+  "type": "module",
+  "description": "Local-first Workspace Organizer plugin for DeepSeek Harness",
+  "engines": {
+    "node": ">=24.0.0",
+    "dsh": "0.2.1-rc.2"
+  },
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./client": "./client/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/",
+    "src/",
+    "client/",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-api-gateway",
+        "@deepseek-ai/dsh-client-ui-workspace"
+      ]
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "pack:plugin": "pnpm run build && node scripts/pack-plugin.mjs",
+    "publish:preview": "pnpm run build && node scripts/pack-plugin.mjs --publish",
+    "build:test": "tsc -p tsconfig.test.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "pnpm run build:test && node --test tests/*.test.mjs",
+    "check": "pnpm run typecheck && pnpm run test"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "4.0.5",
+    "@deepseek-ai/dsh-typert-protocol": "0.2.1-rc.2"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "4.0.5",
+    "@deepseek-ai/dsh": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-api-gateway": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-api-remote-access": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-typert-protocol": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-typert-registry": "0.2.1-rc.2",
+    "@types/node": "26.6.5",
+    "typescript": "5.9.3"
+  }
+}

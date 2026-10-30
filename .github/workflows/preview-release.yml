@@ -1,0 +1,73 @@
+name: Preview build and release
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - 'v*-ui.*'
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Build and test Lite
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.24.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        run: pnpm run typecheck
+      - name: Tests
+        run: pnpm test
+      - name: Produce verified pnpm package
+        run: pnpm run pack:plugin
+      - name: Upload package for diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: workspace-organizer-lite-package
+          path: test/lite-release-packages/*.tgz
+          if-no-files-found: error
+
+  prerelease:
+    name: Publish GitHub prerelease
+    needs: verify
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: workspace-organizer-lite-package
+          path: preview-package
+      - name: Validate version and asset
+        shell: pwsh
+        run: |
+          $package = Get-Content package.json -Raw | ConvertFrom-Json
+          if ("v$($package.version)" -ne "${{ github.ref_name }}") {
+            throw "Tag does not match package version"
+          }
+          $archive = Join-Path preview-package "workspace-organizer-dsh-$($package.version).tgz"
+          if (-not (Test-Path $archive)) { throw "Preview package missing" }
+          $sha = (Get-FileHash $archive -Algorithm SHA256).Hash
+          Write-Output "SHA256: $sha"
+      - name: Create prerelease with pnpm package archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          $package = Get-Content package.json -Raw | ConvertFrom-Json
+          $archive = Join-Path preview-package "workspace-organizer-dsh-$($package.version).tgz"
+          gh release create "${{ github.ref_name }}" $archive --title "Lite Preview ${{ github.ref_name }}" --prerelease --notes-file "docs/RELEASE_NOTES_v$($package.version).md" --verify-tag
